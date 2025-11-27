@@ -19,7 +19,7 @@ namespace AirQuality.Controllers.BaseControllers
         }
 
         [HttpGet("{id}")]
-        public virtual T GetById(Guid id)
+        public virtual T GetById(int id)
         {
             return _service.GetById(id);
         }

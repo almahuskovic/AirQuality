@@ -26,7 +26,7 @@ namespace Infrastructure.BaseServices
             return _mapper.Map<List<T>>(list);
         }
 
-        public virtual T GetById(Guid id)
+        public virtual T GetById(int id)
         {
             var set = Context.Set<TDb>();
             var entity = set.Find(id);

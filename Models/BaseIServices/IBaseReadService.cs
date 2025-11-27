@@ -9,6 +9,6 @@ namespace Models.BaseIServices
     public interface IBaseReadService<T, TSearch> where T : class where TSearch : class
     {
         public IEnumerable<T> Get(TSearch search = null);
-        public T GetById(Guid id);
+        public T GetById(int id);
     }
 }
