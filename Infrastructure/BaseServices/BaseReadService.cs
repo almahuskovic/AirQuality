@@ -19,7 +19,8 @@ namespace Infrastructure.BaseServices
 
             if (search?.Page.HasValue == true && search?.PageSize.HasValue == true)
             {
-                entity = entity.Take(search.PageSize.Value).Skip(search.Page.Value * search.PageSize.Value);
+                var skip = (search.Page.Value - 1) * search.PageSize.Value;
+                entity = entity.Skip(skip).Take(search.PageSize.Value);
             }
 
             var list = entity.ToList();

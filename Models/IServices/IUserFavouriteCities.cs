@@ -1,7 +1,7 @@
 ﻿using Models.BaseIServices;
 using Models.Dto;
-using Models.Requests;
 using Models.Requests.Cities;
+using Models.Requests.UserFavouriteCities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +10,7 @@ using System.Threading.Tasks;
 
 namespace Models.IServices
 {
-    public interface ICity : IBaseCRUDService<CityDto, CitySearchRequest, CityUpsertRequest, CityUpsertRequest>
+    public interface IUserFavouriteCities : IBaseCRUDService<FavouriteCitiesDto, FavouriteCitiesSearchRequest, FavouriteCitiesUpsertRequest, FavouriteCitiesUpsertRequest>
     {
-
-        public void ImportCitiesInDB();
     }
 }

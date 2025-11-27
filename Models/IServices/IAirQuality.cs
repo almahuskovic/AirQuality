@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Models.IServices
 {
-    public class IAirQuality
+    public interface IAirQuality
     {
-        //Task<AirQualityMeasurementDto?> GetLatestByCity(string city);
+        public Task<AirQualityMeasurementDto?> GetLatestByCityId(int cityId);
     }
 }

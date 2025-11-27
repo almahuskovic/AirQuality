@@ -45,14 +45,21 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<Context>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddHttpClient("AirAPI", client =>
+builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("AirQualityAPI", client =>
 {
-    client.BaseAddress = new Uri("https://air-quality-api.open-meteo.com/v1/"); 
+    client.BaseAddress = new Uri(builder.Configuration["AirQualityAPI:BaseUrl"]);
 });
-builder.Services.AddScoped<IAirQuality, AirQualityService>();
 
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+//builder.Services.AddHttpClient("OpenAqAPI", client =>
+//{
+//    client.BaseAddress = new Uri(builder.Configuration["OpenAqAPI:BaseUrl"]);
+//    client.DefaultRequestHeaders.Add("X-API-Key", builder.Configuration["OpenAqAPI:ApiKey"]);
+//});
+
+builder.Services.AddScoped<IAirQuality, AirQualityService>();
 builder.Services.AddScoped<ICity, CityService>();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<Context>()
@@ -98,5 +105,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var cityService = scope.ServiceProvider.GetRequiredService<ICity>();
+    cityService.ImportCitiesInDB();
+}
+
 
 app.Run();

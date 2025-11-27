@@ -1,5 +1,6 @@
 ﻿using Models.Dto;
 using Models.IServices;
+using Newtonsoft.Json;
 using System.Net.Http.Json;
 
 namespace Infrastructure.Services
@@ -9,27 +10,27 @@ namespace Infrastructure.Services
         private readonly HttpClient _httpClient;
         private readonly ICity _httpCity;
 
-        public AirQualityService(HttpClient httpClient, ICity httpCity)
+        public AirQualityService(IHttpClientFactory factory, ICity httpCity)
         {
-            _httpClient = httpClient;
+            _httpClient = factory.CreateClient("AirQualityAPI");
             _httpCity = httpCity;
         }
 
-        public async Task<AirQualityMeasurementDto?> GetLatestByCity(string cityName)
+        public async Task<AirQualityMeasurementDto?> GetLatestByCityId(int cityId)
         {
-            return null;
-            //var city = _httpCity.Get(new Models.Requests.Cities.CitySearchRequest() { Name = cityName });
-            //var response = await _httpClient.GetFromJsonAsync<AirQualityMeasurementDto>($"latest?city={city}");
-            //if (response == null) return null;
-
+            //var city = _httpCity.Get(new Models.Requests.Cities.CitySearchRequest() { Name = cityName }).FirstOrDefault();
+            var city = _httpCity.GetById(cityId);
+            if (city == null)
+            {
+                return null;
+            }
            
-            //return new AirQualityMeasurementDto
-            //{
-            //    City = city,
-            //    PM25 = response.Results.FirstOrDefault()?.Measurements.FirstOrDefault(m => m.Parameter == "pm25")?.Value ?? 0,
-            //    PM10 = response.Results.FirstOrDefault()?.Measurements.FirstOrDefault(m => m.Parameter == "pm10")?.Value ?? 0,
-            //    MeasuredAt = DateTime.UtcNow
-            //};
+            var response = await _httpClient.GetStringAsync($"{_httpClient.BaseAddress}?latitude={city.Latitude}&longitude={city.Longitude}&hourly=pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide,ammonia&timezone=UTC");
+            if (response == null) { return null; }
+            var data=JsonConvert.DeserializeObject<AirQualityMeasurementDto>(response);
+
+
+            return data;
         }
     }
 }

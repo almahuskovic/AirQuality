@@ -1,0 +1,8 @@
+﻿using Models.BaseModels;
+
+namespace Models.Requests.UserFavouriteCities
+{
+    public class FavouriteCitiesSearchRequest : BaseSearchObject
+    {
+    }
+}

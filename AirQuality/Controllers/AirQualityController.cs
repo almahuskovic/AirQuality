@@ -1,12 +1,24 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Models.Dto;
+using Models.IServices;
 
 namespace AirQuality.Controllers
 {
-    public class AirQualityController : Controller
+    [ApiController]
+    [Route("[controller]")]
+    public class AirQualityController : ControllerBase
     {
-        public IActionResult Index()
+        protected readonly IAirQuality _airService;
+
+        public AirQualityController(IAirQuality airService)
         {
-            return View();
+            _airService = airService;
+        }
+
+        [HttpGet("{id}")]
+        public async Task<AirQualityMeasurementDto?> GetLatestByCity(int id)
+        {
+            return await _airService.GetLatestByCityId(id);
         }
     }
 }
