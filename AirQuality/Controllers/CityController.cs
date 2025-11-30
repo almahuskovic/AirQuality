@@ -12,9 +12,13 @@ namespace AirQuality.Controllers
     //[Authorize]
     public class CityController : BaseCRUDController<CityDto, CitySearchRequest, CityUpsertRequest, CityUpsertRequest>
     {
+        protected readonly ICity _cityService;
+
         public CityController(ICity cityService) : base(cityService)
         {
-
+            _cityService = cityService;
         }
+
+        
     }
 }

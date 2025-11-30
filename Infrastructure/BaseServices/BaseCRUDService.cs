@@ -23,7 +23,7 @@ namespace Infrastructure.BaseServices
             return _mapper.Map<T>(entity);
         }
 
-        public async virtual Task<T> Update(Guid id, TUpdate request)
+        public async virtual Task<T> Update(int id, TUpdate request)
         {
             var set = Context.Set<TDb>();
             var entity = set.Find(id);
@@ -38,7 +38,7 @@ namespace Infrastructure.BaseServices
             return _mapper.Map<T>(entity);
         }
 
-        public async virtual Task<T> Delete(Guid id, bool hardDelete = false)
+        public async virtual Task<T> Delete(int id, bool hardDelete = false)
         {
             var entity = Context.Set<TDb>().Find(id);
             if (entity == null)

@@ -1,12 +1,9 @@
 ﻿using AutoMapper;
-using Azure;
 using Infrastructure.BaseServices;
-using Microsoft.EntityFrameworkCore;
 using Models.Dto;
 using Models.Entities;
 using Models.IServices;
 using Models.Requests.Cities;
-using Newtonsoft.Json;
 using System.Globalization;
 
 namespace Infrastructure.Services
@@ -26,9 +23,15 @@ namespace Infrastructure.Services
                 entity = entity.Where(x => x.Name.Contains(search.Name));
             }
 
-            if (!string.IsNullOrWhiteSpace(search.Country))
+            if (!string.IsNullOrWhiteSpace(search.ISO))
             {
-                entity = entity.Where(x => x.Country.Contains(search.Country));
+                entity = entity.Where(x => x.ISO.Contains(search.ISO));
+            }
+
+            if (search.South.HasValue && search.West.HasValue && search.East.HasValue && search.North.HasValue)
+            {
+                entity = entity.Where(x => x.Latitude <= search.North && x.Latitude >= search.South &&
+                        x.Longitude <= search.East && x.Longitude >= search.West);
             }
 
             if (search?.Page.HasValue == true && search?.PageSize.HasValue == true)
@@ -41,9 +44,9 @@ namespace Infrastructure.Services
             return _mapper.Map<List<CityDto>>(list);
         }
 
-        public void ImportCitiesInDB()
+        public async Task ImportCitiesInDB()
         {
-            if (Context.Cities.Any())  
+            if (Context.Cities.Any())
             {
                 Console.WriteLine("Data already exists");
                 return;
@@ -51,7 +54,7 @@ namespace Infrastructure.Services
 
             var cities = new List<City>();
 
-            using (var reader = new StreamReader("./Files/worldcities.csv"))
+            using (var reader = new StreamReader("./wwwroot/worldcities.csv"))
             {
                 reader.ReadLine();
 
@@ -65,7 +68,8 @@ namespace Infrastructure.Services
                         Name = values[0].Trim('"'),
                         Country = values[4].Trim('"'),
                         Latitude = double.Parse(values[2].Trim('"'), CultureInfo.InvariantCulture),
-                        Longitude = double.Parse(values[3].Trim('"'), CultureInfo.InvariantCulture)
+                        Longitude = double.Parse(values[3].Trim('"'), CultureInfo.InvariantCulture),
+                        ISO = values[5].Trim('"'),
                     };
 
                     cities.Add(city);
@@ -73,7 +77,7 @@ namespace Infrastructure.Services
             }
 
             Context.Cities.AddRange(cities);
-            Context.SaveChanges(); 
+            Context.SaveChanges();
             Console.WriteLine("Success.");
         }
     }

@@ -1,0 +1,31 @@
+﻿.aq-marker {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    border: 2px solid white;
+    font-size: 14px;
+}
+
+.aq-legend {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255,255,255,0.9);
+    padding: 12px;
+    border-radius: 8px;
+    line-height: 22px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.25);
+}
+
+#a-legenda span {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    margin-right: 6px;
+    border-radius: 4px;
+}

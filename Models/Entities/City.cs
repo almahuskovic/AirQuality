@@ -6,6 +6,7 @@ namespace Models.Entities
     {
         public string Name { get; set; }
         public string Country { get; set; }
+        public string ISO { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
 

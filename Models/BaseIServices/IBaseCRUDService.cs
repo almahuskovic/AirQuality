@@ -10,7 +10,7 @@ namespace Models.BaseIServices
       where T : class where TSearch : class where TInsert : class where TUpdate : class
     {
         Task<T> Insert(TInsert request);
-        Task<T> Update(Guid id, TUpdate request);
-        Task<T> Delete(Guid id, bool hardDelete = false);
+        Task<T> Update(int id, TUpdate request);
+        Task<T> Delete(int id, bool hardDelete = false);
     }
 }
