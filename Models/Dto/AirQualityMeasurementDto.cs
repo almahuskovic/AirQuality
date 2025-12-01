@@ -15,6 +15,8 @@ namespace Models.Dto
         public int AQI { get; set; }
         public DateTime MeasuredAt { get; set; }
         public int CityId { get; set; }
+        public string City { get; set; }
+        public string Country { get; set; }
     }
 
    

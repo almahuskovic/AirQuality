@@ -1,4 +1,5 @@
-﻿using Models.Dto;
+﻿using AutoMapper;
+using Models.Dto;
 using Models.Entities;
 using Models.IServices;
 using Newtonsoft.Json;
@@ -10,29 +11,36 @@ namespace Infrastructure.Services
         private readonly HttpClient _httpClient;
         private readonly ICity _httpCity;
         private readonly Context _context;
+        private readonly IMapper _mapper;
 
-        public AirQualityService(Context context, IHttpClientFactory factory, ICity httpCity)
+        public AirQualityService(Context context, IHttpClientFactory factory, ICity httpCity,IMapper mapper)
         {
             _httpClient = factory.CreateClient("AirQualityAPI");
             _httpCity = httpCity;
             _context = context;
+            _mapper = mapper;
         }
 
         public async Task<AirQualityMeasurementDto?> GetLatestByCityId(int cityId)
         {
-            //var city = _httpCity.Get(new Models.Requests.Cities.CitySearchRequest() { Name = cityName }).FirstOrDefault();
             var city = _httpCity.GetById(cityId);
             if (city == null)
             {
                 return null;
             }
+            var query = _context.AirQualityMeasurements.AsEnumerable();
+            query = query.Where(x => cityId == x.CityId);
 
-            var response = await _httpClient.GetStringAsync($"{_httpClient.BaseAddress}?latitude={city.Latitude}&longitude={city.Longitude}&hourly=pm10,pm2_5,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide,ammonia&timezone=UTC");
-            if (response == null) { return null; }
-            var data = JsonConvert.DeserializeObject<AirQualityMeasurementDto>(response);
+            var result = query.Select(x => new AirQualityMeasurementDto()
+            {
+                AQI = x.AQI,
+                MeasuredAt = x.MeasuredAt,
+                CityId = x.CityId,
+                City = x.City.Name,
+                Country = x.City.Country,
+            }).FirstOrDefault();
 
-
-            return data;
+            return result;
         }
 
         public async Task<List<AirQualityApiResponse>?> GetAQIByCities(string iso)
@@ -45,7 +53,7 @@ namespace Infrastructure.Services
             List<AirQualityApiResponse> result = new List<AirQualityApiResponse>();
             try
             {
-                var query = _context.AirQualityMeasurements.AsQueryable();
+                var query = _context.AirQualityMeasurements.AsEnumerable();
                 query = query.Where(x => cities.Any(y => y.Id == x.CityId));
 
                 result = query.Select(x => new AirQualityApiResponse()
@@ -54,12 +62,6 @@ namespace Infrastructure.Services
                     Latitude = x.City.Latitude,
                     Current = new Current() { Us_Aqi = x.AQI }
                 }).ToList();
-                //foreach (var city in cities)
-                //{
-                //    var response = await _httpClient.GetStringAsync($"{_httpClient.BaseAddress}?latitude={city.Latitude}&longitude={city.Longitude}&current=us_aqi&timezone=UTC");
-                //    if (!string.IsNullOrWhiteSpace(response))
-                //        result.Add(JsonConvert.DeserializeObject<AirQualityApiResponse>(response));
-                //}
             }
             catch (Exception e)
             {
@@ -78,7 +80,7 @@ namespace Infrastructure.Services
                 return null;
             }
 
-            var query = _context.AirQualityMeasurements.AsQueryable();
+            var query = _context.AirQualityMeasurements.AsEnumerable();
             query = query.Where(x => cities.Any(y => y.Id == x.CityId));
 
             var result = query.Select(x => new AirQualityApiResponse()
@@ -87,13 +89,7 @@ namespace Infrastructure.Services
                 Latitude = x.City.Latitude,
                 Current = new Current() { Us_Aqi = x.AQI }
             }).ToList();
-            //foreach (var city in cities)
-            //{
-            //    var response = await _httpClient.GetStringAsync($"{_httpClient.BaseAddress}?latitude={city.Latitude}&longitude={city.Longitude}&current=us_aqi&timezone=UTC");
-            //    if (!string.IsNullOrWhiteSpace(response))
-            //        result.Add(JsonConvert.DeserializeObject<AirQualityApiResponse>(response));
-            //}
-
+           
             return result;
         }
 
@@ -110,7 +106,7 @@ namespace Infrastructure.Services
                     if (airQuality == null || minutes > 60)
                     {
                         Console.WriteLine($"{_httpClient.BaseAddress}?latitude={city.Latitude}&longitude={city.Longitude}&current=us_aqi&timezone=UTC");
-                        var response = await _httpClient.GetStringAsync($"{_httpClient.BaseAddress}?latitude={city.Latitude}&longitude={city.Longitude}&current=us_aqi&timezone=UTC");
+                        var response = await _httpClient.GetStringAsync($"{_httpClient.BaseAddress}?latitude={city.Latitude}&longitude={city.Longitude}&hourly=pm2_5&current=us_aqi&timezone=UTC");
                         if (response != null)
                         {
                             var data = JsonConvert.DeserializeObject<AirQualityApiResponse>(response);
@@ -127,7 +123,7 @@ namespace Infrastructure.Services
                             await _context.SaveChangesAsync();
                         }
 
-                        await Task.Delay(10000); // delay 1 sec to avoid rate limit
+                        await Task.Delay(1000); // delay 1 sec to avoid rate limit
                     }
                 }
                 catch (Exception ex)

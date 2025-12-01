@@ -29,6 +29,8 @@ namespace Models.Dto
         public List<double?> SulphurDioxide { get; set; }
         public List<double?> CarbonMonoxide { get; set; }
         public List<double?> Ammonia { get; set; }
+        public List<double?> Temperature_2m { get; set; }
+        public List<double?> Humidity_2m { get; set; }
     }
 
     public class HourlyUnits
@@ -40,6 +42,7 @@ namespace Models.Dto
         public string SulphurDioxide { get; set; }
         public string CarbonMonoxide { get; set; }
         public string Ammonia { get; set; }
+        public string Temperature_2m { get; set; }
     }
     public class Current
     {

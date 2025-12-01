@@ -9,6 +9,7 @@ namespace Models.Entities
         public string ISO { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
+        public bool IsCapital { get; set; }
 
         public ICollection<AirQualityMeasurement> Measurements { get; set; }
     }

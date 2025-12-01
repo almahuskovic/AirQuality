@@ -27,7 +27,7 @@ namespace Infrastructure.Services.BackgroundServices
                 using var scope = _scopeFactory.CreateScope();
                 var service = scope.ServiceProvider.GetRequiredService<ICity>();
 
-                await service.ImportCitiesInDB(); // update values in DB
+                service.ImportCitiesInDB(); // update values in DB
                 if (!_taskCompletionSource.Task.IsCompleted)
                 {
                     _taskCompletionSource.SetResult(true); // Signaliziraj samo ako zadatak nije već završen

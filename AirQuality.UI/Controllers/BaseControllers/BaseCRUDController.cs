@@ -19,7 +19,7 @@ namespace AirQuality.UI.Controllers.BaseControllers
         {
             try
             {
-                return await _crudService.Insert(request);
+                return Ok(await _crudService.Insert(request));
             }
             catch (Exception ex)
             {
@@ -32,7 +32,7 @@ namespace AirQuality.UI.Controllers.BaseControllers
         {
             try
             {
-                return await _crudService.Update(id, request);
+                return Ok(await _crudService.Update(id, request));
             }
             catch (Exception ex)
             {
@@ -52,7 +52,7 @@ namespace AirQuality.UI.Controllers.BaseControllers
         {
             try
             {
-                return await _crudService.Delete(id);
+                return Ok(await _crudService.Delete(id));
             }
             catch (Exception ex)
             {

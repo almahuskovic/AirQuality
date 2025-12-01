@@ -12,7 +12,6 @@ namespace Models.IServices
 {
     public interface ICity : IBaseCRUDService<CityDto, CitySearchRequest, CityUpsertRequest, CityUpsertRequest>
     {
-
-        public Task ImportCitiesInDB();
+        public void ImportCitiesInDB();
     }
 }

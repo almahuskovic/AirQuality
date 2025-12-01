@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
+using CsvHelper;
 using Infrastructure.BaseServices;
 using Models.Dto;
 using Models.Entities;
 using Models.IServices;
 using Models.Requests.Cities;
+using System.Collections.Generic;
+using System.Formats.Asn1;
 using System.Globalization;
 
 namespace Infrastructure.Services
@@ -16,11 +19,11 @@ namespace Infrastructure.Services
 
         public override IEnumerable<CityDto> Get(CitySearchRequest search)
         {
-            var entity = Context.Set<City>().AsQueryable();
+           var entity = Context.Set<City>().AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search.Name))
             {
-                entity = entity.Where(x => x.Name.Contains(search.Name));
+                entity = entity.Where(x => x.Name.ToLower().Contains(search.Name.ToLower()) || x.Country.ToLower().Contains(search.Name.ToLower()));
             }
 
             if (!string.IsNullOrWhiteSpace(search.ISO))
@@ -44,7 +47,7 @@ namespace Infrastructure.Services
             return _mapper.Map<List<CityDto>>(list);
         }
 
-        public async Task ImportCitiesInDB()
+        public void ImportCitiesInDB()
         {
             if (Context.Cities.Any())
             {
@@ -52,32 +55,42 @@ namespace Infrastructure.Services
                 return;
             }
 
-            var cities = new List<City>();
+            var cities = new List<CityCsv>();
 
             using (var reader = new StreamReader("./wwwroot/worldcities.csv"))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                reader.ReadLine();
-
-                while (!reader.EndOfStream)
+                try
                 {
-                    var line = reader.ReadLine();
-                    var values = line.Split(',');
-
-                    var city = new City
-                    {
-                        Name = values[0].Trim('"'),
-                        Country = values[4].Trim('"'),
-                        Latitude = double.Parse(values[2].Trim('"'), CultureInfo.InvariantCulture),
-                        Longitude = double.Parse(values[3].Trim('"'), CultureInfo.InvariantCulture),
-                        ISO = values[5].Trim('"'),
-                    };
-
-                    cities.Add(city);
+                    var records = csv.GetRecords<CityCsv>().ToList();
+                    cities.AddRange(records);
+                }
+                catch (Exception e)
+                {
+                    throw;
                 }
             }
 
-            Context.Cities.AddRange(cities);
-            Context.SaveChanges();
+            if(cities.Any())
+            {
+                var citiesToAdd = new List<CityCsv>();
+                citiesToAdd.AddRange(cities.Where(x => x.capital == "primary" || x.iso2 == "BA").ToList());
+                citiesToAdd.AddRange(cities.Where(x => x.capital == "admin" && x.population != null).OrderByDescending(x => x.population).Take(80));
+
+                var citiesDb = citiesToAdd.Select(x => new City()
+                {
+                    Name = x.city,
+                    Longitude = x.lng,
+                    Latitude = x.lat,
+                    Country = x.country,
+                    IsCapital = x.capital == "primary" ? true : false,
+                    ISO = x.iso2,
+                }).ToList();
+
+                Context.Cities.AddRange(citiesDb);
+                Context.SaveChanges();
+            }
+           
             Console.WriteLine("Success.");
         }
     }

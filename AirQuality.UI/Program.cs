@@ -2,7 +2,6 @@ using Infrastructure;
 using Infrastructure.Identity;
 using Infrastructure.Services;
 using Infrastructure.Services.BackgroundServices;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -47,12 +46,6 @@ builder.Services.AddHttpClient("AirQualityAPI", client =>
     client.BaseAddress = new Uri(builder.Configuration["AirQualityAPI:BaseUrl"]);
 });
 
-//builder.Services.AddHttpClient("OpenAqAPI", client =>
-//{
-//    client.BaseAddress = new Uri(builder.Configuration["OpenAqAPI:BaseUrl"]);
-//    client.DefaultRequestHeaders.Add("X-API-Key", builder.Configuration["OpenAqAPI:ApiKey"]);
-//});
-
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -62,7 +55,10 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 builder.Services.AddScoped<IAirQuality, AirQualityService>();
 builder.Services.AddScoped<ICity, CityService>();
+builder.Services.AddScoped<IFavouriteCities, FavouriteCitiesService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, DummyEmailSender>();
+builder.Services.AddHttpContextAccessor();
 
 var taskCompletionSource = new TaskCompletionSource<bool>();
 

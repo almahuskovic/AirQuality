@@ -32,7 +32,7 @@ namespace Infrastructure.Services.BackgroundServices
 
                 await service.RefreshAirQualityData(); // update values in DB
                                                 
-                await Task.Delay(TimeSpan.FromMinutes(5000), stoppingToken); // refresh every 30 min
+                await Task.Delay(TimeSpan.FromMinutes(60), stoppingToken); // refresh every 60 min
             }
         }
     }

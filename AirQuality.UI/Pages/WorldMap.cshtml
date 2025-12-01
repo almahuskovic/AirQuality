@@ -7,16 +7,16 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
 
 
-<form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+<form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search position-relative" style="width:100%;">
     <div class="input-group">
         <input id="city-search" type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
                aria-label="Search" aria-describedby="basic-addon2">
+        <ul id="searchResults" class="list-group position-absolute mt-1 mw-100" style="z-index: 999; top:100%;"></ul>
         <div class="input-group-append">
             <button class="btn btn-primary" type="button">
                 <i class="fas fa-search fa-sm"></i>
             </button>
         </div>
-        <div id="city-search-results" style="display: none;"></div>
     </div>
 </form>
 <div id="map" style="height: 90vh; border-radius:10px;"></div>
@@ -42,56 +42,9 @@
     </div>
 </div>
 
-
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 <script src="~/js/airmap.js"></script>
-<script>
-    $(document).ready(function () {
-       // When the user types in the search input
-       $('#city-search').on('input', function () {
-         var query = $(this).val().trim(); // Get the current value from the input field
-
-         // Only perform the search if the query length is greater than 2 characters
-         if (query.length > 2) {
-           $.ajax({
-             url: '/City/Get',  // Endpoint for searching cities
-             method: 'GET',
-             data: { query: query }, // Pass the query parameter to the backend
-             success: function (data) {
-               // Clear the previous results
-               $('#city-search-results').empty().show();
-
-               // If there are results, populate the dropdown with city names
-               if (data.length > 0) {
-                 data.forEach(function (city) {
-                   $('#city-search-results').append(
-                     `<div class="city-result" data-city-id="${city.id}">${city.name}</div>`
-                   );
-                 });
-               } else {
-                 $('#city-search-results').append('<div class="city-result">No cities found</div>');
-               }
-             },
-             error: function () {
-               console.log('Error fetching cities.');
-             }
-           });
-         } else {
-           $('#city-search-results').hide(); // Hide results if query is empty
-         }
-       });
-
-       // When a city is clicked from the results, set the input value and hide the dropdown
-       $('#city-search-results').on('click', '.city-result', function () {
-         var cityName = $(this).text();
-         var cityId = $(this).data('city-id');
-         $('#city-search').val(cityName);  // Set the selected city in the input field
-         $('#city-search-results').hide();  // Hide the results dropdown
-         console.log("Selected City ID: " + cityId);  // You can handle the selected city ID as needed
-       });
-     });
-</script>
 
 <style>
     .legend {
@@ -137,5 +90,11 @@
 
     .legend-item span{
         margin:5px 8px;
+    }
+
+    .input-group{
+        margin: 30px;
+        padding: 0 15%;
+        width: auto;
     }
 </style>

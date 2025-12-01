@@ -19,9 +19,8 @@ async function loadCities(bounds) {
     const url = `/AirQuality/GetAQIForVisibleCities?north=${bounds._northEast.lat}&south=${bounds._southWest.lat}&east=${bounds._northEast.lng}&west=${bounds._southWest.lng}`;
 
     const response = await fetch(url);
-    if (response != null) {
+    if (response.ok) {
         const cities = await response.json();
-        console.log(cities);
         markers.clearLayers();
 
         cities.forEach(city => {
@@ -38,22 +37,6 @@ async function loadCities(bounds) {
                 .addTo(markers);
         });
     }
-   
-
-    //cities.forEach(c => {
-    //    var color = getAqiColor(c.current.us_Aqi);
-
-    //    var icon = L.divIcon({
-    //        html: `<div class="aq-marker" style="background:${color}">${c.current.us_Aqi}</div>`,
-    //        className: "marker-aqi",
-    //        iconSize: [35, 35]
-    //    });
-
-    //    L.marker([c.latitude, c.longitude], { icon: icon })
-    //        .bindPopup(`<b>${c.name}</b><br>AQI: ${c.current.us_Aqi}`)
-    //        .addTo(markers);
-    //});
-   
 }
 
 function getAqiColor(aqi) {
@@ -65,14 +48,46 @@ function getAqiColor(aqi) {
     return 'maroon';
 }
 
-// ---- Legend ----
-//var legend = document.getElementById("legend");
-//legend.innerHTML = `
-//    <h4>AQI Legend</h4>
-//    <div><span style="background:#6BCB77"></span> Good (0-50)</div>
-//    <div><span style="background:#FFD93D"></span> Moderate (51-100)</div>
-//    <div><span style="background:#FF6B6B"></span> Unhealthy for Sensitive (101-150)</div>
-//    <div><span style="background:#C44536"></span> Unhealthy (151-200)</div>
-//    <div><span style="background:#8D5A97"></span> Very Unhealthy (201-300)</div>
-//    <div><span style="background:#6A040F"></span> Hazardous (300+)</div>
-//`;
+const searchInput = document.getElementById("city-search");
+const resultsList = document.getElementById("searchResults");
+const inputGroup = document.getElementById("input-group");
+const searchForm = searchInput.closest('form');
+let searchTimeout = null;
+
+searchInput.addEventListener("input", function () {
+    const query = this.value.trim();
+    clearTimeout(searchTimeout);
+
+    if (query.length < 2) {
+        resultsList.innerHTML = "";
+        return;
+    }
+
+    searchTimeout = setTimeout(async () => {
+        const response = await fetch(`/City?name=${query}`);
+        const data = await response.json();
+        resultsList.innerHTML = "";
+
+        data.forEach(city => {
+            const item = document.createElement("button");
+            item.className = "list-group-item list-group-item-action";
+            item.innerText = city.name + ', ' + city.country;
+
+            item.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                map.flyTo([city.latitude, city.longitude], 9, { animate: true, duration: 1.2 });
+                resultsList.innerHTML = "";
+                searchInput.value = city.name;
+            });
+
+            resultsList.appendChild(item);
+        });
+    }, 300);
+});
+
+document.addEventListener('click', (e) => {
+    if (!searchForm.contains(e.target)) {
+        resultsList.style.display = 'none';
+    }
+});

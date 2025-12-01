@@ -6,12 +6,12 @@ using Models.Requests.UserFavouriteCities;
 
 namespace AirQuality.UI.Controllers
 {
-    public class UserFavouriteCitiesController : BaseCRUDController<FavouriteCitiesDto, FavouriteCitiesSearchRequest, FavouriteCitiesUpsertRequest, FavouriteCitiesUpsertRequest>
+    [ApiController]
+    [Route("api/[controller]")]
+    public class FavouriteCitiesController : BaseCRUDController<FavouriteCitiesDto, FavouriteCitiesSearchRequest, FavouriteCitiesUpsertRequest, FavouriteCitiesUpsertRequest>
     {
-        protected readonly IUserFavouriteCities _userFavouriteCities;
-        public UserFavouriteCitiesController(IUserFavouriteCities userFavouriteCities) : base(userFavouriteCities)
-        {
-
+        public FavouriteCitiesController(IFavouriteCities favouriteCities) : base(favouriteCities)
+        {     
         }
     }
 }
