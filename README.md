@@ -26,7 +26,7 @@ update-database
 Tehnologije korištene u projektu
 
 .NET 8.0 Core / C#
-MVC/ Razor Pages (UI)/n
+MVC/ Razor Pages (UI)
 Entity Framework Core
 SQL Server
 Open-Meteo Air Quality API(https://open-meteo.com/en/docs/air-quality-api)
