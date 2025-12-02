@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Models.BaseIServices;
+using Infrastructure.Interfaces.BaseServices;
 using Models.BaseModels;
 
 namespace Infrastructure.BaseServices

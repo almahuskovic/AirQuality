@@ -1,6 +1,7 @@
 ﻿@page
 @model AirQuality.UI.Pages.WorldMapModel
 @{
+    ViewData["Title"] = "World Map";
 }
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
@@ -11,7 +12,7 @@
     <div class="input-group">
         <input id="city-search" type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
                aria-label="Search" aria-describedby="basic-addon2">
-        <ul id="searchResults" class="list-group position-absolute mt-1 mw-100" style="z-index: 999; top:100%;"></ul>
+        <ul id="searchResults" class="list-group position-absolute mt-1 mw-100" style="z-index: 999; top:100%; width:65%;"></ul>
         <div class="input-group-append">
             <button class="btn btn-primary" type="button">
                 <i class="fas fa-search fa-sm"></i>
@@ -44,57 +45,104 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
-<script src="~/js/airmap.js"></script>
+@section Scripts{
+<script>
+        var map = L.map('map', {
+            maxZoom: 18,
+            minZoom: 2
+        }).setView([48.77, 9.18], 6);
 
-<style>
-    .legend {
-        border-radius: 5px;
-        margin:20px auto;
-        justify-content:center;
-        display:flex;
-        font-size:14px;
-        color:white;
-    }
+        let markers = L.layerGroup().addTo(map);
+        map.addLayer(markers);
 
-    .legend .legend-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 5px;
-        box-sizing:border-box;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    }
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18
+        }).addTo(map);
 
-    .legend .good {
-        background-color: green;
-    }
+        map.on('zoomend moveend', function () {
+            loadCities(map.getBounds());
+        });
 
-    .legend .moderate {
-        background-color: yellow;
-    }
+        async function loadCities(bounds) {
+            const url = `/api/AirQuality/GetAQIForVisibleCities?north=${bounds._northEast.lat}&south=${bounds._southWest.lat}&east=${bounds._northEast.lng}&west=${bounds._southWest.lng}`;
 
-    .legend .unhealthy-sensitive {
-        background-color: orange;
-    }
+            const response = await fetch(url);
+            if (response.ok) {
+                const cities = await response.json();
+                markers.clearLayers();
 
-    .legend .unhealthy {
-        background-color: red;
-    }
+                cities.forEach(city => {
+                    let color = getAqiColor(city.current.us_Aqi);
 
-    .legend .very-unhealthy {
-        background-color: purple;
-    }
+                    let marker = L.circleMarker([city.latitude, city.longitude], {
+                        radius: 12,
+                        weight: 2,
+                        color: "#fff",
+                        fillColor: color,
+                        fillOpacity: 0.9
+                    })
+                    .bindTooltip(`AQI: ${city.current.us_Aqi}`)
+                    .addTo(markers);
+                });
+            }
+        }
 
-    .legend .hazardous {
-        background-color: maroon;
-    }
+        function getAqiColor(aqi) {
+            if (0 < aqi && aqi <= 50) return 'green';
+            if (aqi >= 51 && aqi <= 100) return 'yellow';
+            if (aqi >= 101 && aqi <= 150) return 'orange';
+            if (aqi >= 151 && aqi <= 200) return 'red';
+            if (aqi >= 201 && aqi <= 300) return 'purple';
+            return 'maroon';
+        }
 
-    .legend-item span{
-        margin:5px 8px;
-    }
+        const searchInput = document.getElementById("city-search");
+        const resultsList = document.getElementById("searchResults");
+        const inputGroup = document.getElementById("input-group");
+        const searchForm = searchInput.closest('form');
+        let searchTimeout = null;
 
-    .input-group{
-        margin: 30px;
-        padding: 0 15%;
-        width: auto;
-    }
-</style>
+        searchInput.addEventListener("input", function () {
+            const query = this.value.trim();
+            clearTimeout(searchTimeout);
+
+            if (query.length < 1) {
+                resultsList.innerHTML = "";
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                const response = await fetch(`/api/City?name=${query}`);
+                const data = await response.json();
+                resultsList.innerHTML = "";
+
+                data.forEach(city => {
+                    const item = document.createElement("button");
+                    item.className = "list-group-item list-group-item-action";
+                    resultsList.style.display = 'block';
+                    item.innerText = city.name + ', ' + city.country;
+
+                    item.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        map.flyTo([city.latitude, city.longitude], 9, { animate: true, duration: 1.2 });
+                        resultsList.innerHTML = "";
+                        searchInput.value = city.name + ', ' + city.country;
+                    });
+
+                    resultsList.appendChild(item);
+                });
+            }, 300);
+        });
+
+        document.addEventListener('focus', function () {
+            resultsList.style.display = 'block';
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!resultsList.contains(event.target) && !resultsList.contains(event.target)) {
+                resultsList.style.display = 'none';
+            }
+        });
+</script>
+}

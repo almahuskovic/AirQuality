@@ -9,6 +9,7 @@ namespace Models.Dto
 {
     public class AirQualityMeasurementDto
     {
+        public int Id{ get; set; }
         public double PM25 { get; set; }
         public double PM10 { get; set; }
         public double NO2 { get; set; }

@@ -1,12 +1,10 @@
 ﻿@page 
 @model FavouriteCitiesModel
 @{
+    ViewData["Title"] = "Favourite Cities";
 }
-<div id="server-rendered-debug" class="mb-3">
-    Server rendered at @DateTime.Now
-</div>
 
-<h5 class="display-4">Your favourite places</h5>
+<h6 class="display-4">Your favourite places</h6>
 <div style="margin:50px 0;">
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
         <i class="fas fa-plus"></i>  Add
@@ -17,7 +15,7 @@
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
+                <thead id="favouritesThead">
                     <tr>
                         <th>City</th>
                         <th>Country</th>
@@ -34,24 +32,30 @@
                         foreach (var f in Model.Cities)
                         {
                             <tr>
-                                <td>@f.City</td>
-                                <td>@f.Country</td>
-                                <td>@f.AQI</td>
-                                <td>@f.PM25</td>
-                                <td>@f.PM10</td>
-                                <td>@f.MeasuredAt</td>
+                                <td>@f.CityData.City</td>
+                                <td>@f.CityData.Country</td>
+                                <td>@f.CityData.AQI</td>
+                                <td>@f.CityData.PM25</td>
+                                <td>@f.CityData.PM10</td>
+                                <td>@f.CityData.MeasuredAt</td>
                                 <td>
-                                    <button class="btn btn-sm btn-danger remove-favourite" type="button" data-fav-id="@( (f.GetType().GetProperty("Id") != null) ? ((dynamic)f).Id : 0 )">
+                                    <button class="btn btn-sm btn-danger remove-favourite" type="button" data-fav-id="@f.Id">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    <div class="popover-confirm d-none">
+                                        <button class="btn btn-sm btn-danger confirm-delete">Confirm Delete</button>
+                                        <button class="btn btn-sm btn-secondary cancel-delete">Cancel</button>
+                                    </div>
                                 </td>
                             </tr>
                         }
                     }
                     else
                     {
-                        <tr>
-                            <td colspan="8" class="text-center text-muted">You have no favourite cities yet.</td>
+                        <tr id="noDataRow">
+                            <td colspan="8" class="text-center text-muted">
+                                <i class="fas fa-search" style="height:30px;"></i> You have no favourite cities yet.
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -79,13 +83,13 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Add favourite city</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <input id="city-search" type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
                        aria-label="Search" aria-describedby="basic-addon2">
-                <ul id="searchResults" class="list-group position-absolute mt-1 mw-100" style="z-index: 999; top:100%; max-height:240px; overflow-y:auto;"></ul>
+                <ul id="searchResults" class="list-group position-absolute mt-1 mw-100" style="z-index: 999; top:76%; max-height:240px; overflow-y:auto; width:94%;"></ul>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -97,33 +101,39 @@
 @section Scripts{
 <script>
     $(document).ready(function () {
-      //your code here
-   
-    // Pagination + incremental loading + server-side search + selection enabling Save
     (function () {
         const searchInput = document.getElementById("city-search");
         const resultsList = document.getElementById("searchResults");
         const saveBtn = document.getElementById("saveCityBtn");
-        const favouritesTbody = document.getElementById("favouritesTbody");
+        const tableBody = document.getElementById("favouritesTbody");
+        const noDataRow = document.getElementById("noDataRow");
+        const searchModal = document.getElementById("exampleModal");
+        const favouritesThead= document.getElementById("favouritesThead");
         let selectedCity = null;
 
-        // paging state
         let page = 1;
         const pageSize = 25;
         let isLoading = false;
         let hasMore = true;
         let currentTerm = "";
 
-        // debounce timer for typing
         let inputDebounce = null;
 
-        // utility to build query string - backend expects Name, Page, PageSize
+        const hasData = tableBody.rows.length > 1;
+        if (!hasData) {
+            favouritesThead.style.display = 'none';
+        }
+        else{
+            favouritesThead.style.display = '';
+        }
+
         function buildUrl(term, p) {
             const params = new URLSearchParams();
             if (term && term.length > 0) params.append("Name", term);
             params.append("Page", p);
             params.append("PageSize", pageSize);
-            return `/City?${params.toString()}`;
+            params.append("SkipFavourites", true);
+            return `/api/City?${params.toString()}`;
         }
 
         async function loadCities(term, reset = false) {
@@ -145,11 +155,10 @@
                 if (!resp.ok) throw new Error("Failed to load cities");
                 const items = await resp.json();
 
-                // if fewer items than pageSize -> no more pages
                 if (!Array.isArray(items) || items.length < pageSize) {
                     hasMore = false;
                 }
-
+                resultsList.style.display = 'block';
                 appendCities(items);
                 page++;
             } catch (err) {
@@ -162,13 +171,13 @@
         function appendCities(cities) {
             if (!cities || cities.length === 0) {
                 if (resultsList.children.length === 0) {
-                         const empty = document.createElement("div");
+                    const empty = document.createElement("div");
                     empty.className = "text-muted p-2";
                     empty.textContent = "No cities available";
                     resultsList.appendChild(empty);
                 }
-                    saveBtn.disabled = true;
-            hasMore = false;
+                saveBtn.disabled = true;
+                hasMore = false;
                 return;
             }
 
@@ -192,16 +201,11 @@
         }
 
         function selectCity(city, element) {
-            // clear previous active
             [...resultsList.children].forEach(ch => ch.classList.remove("active"));
             if (element) element.classList.add("active");
             selectedCity = city;
             searchInput.value = `${city.name}, ${city.country}`;
-            // collapse results to avoid accidental further scrolls
-            // keep the list visible if you want a visual confirmation
-            // clear results to make selection obvious
             resultsList.innerHTML = "";
-            // set hasMore false temporarily so further scroll doesn't fetch
             hasMore = false;
             updateSaveButton();
         }
@@ -210,30 +214,32 @@
             saveBtn.disabled = selectedCity === null;
         }
 
-        // scroll: when user scrolls near bottom, load next page
+        // load next page
         resultsList.addEventListener("scroll", () => {
             if (isLoading || !hasMore) return;
-            const threshold = 80; // px from bottom
+            const threshold = 80; 
             if (resultsList.scrollTop + resultsList.clientHeight >= resultsList.scrollHeight - threshold) {
                 loadCities(currentTerm, false);
             }
         });
 
-        // typing: server-side accurate search. debounce to avoid too many calls.
         searchInput.addEventListener("input", function () {
             const term = this.value.trim();
+            if (term.length < 1) {
+                resultsList.innerHTML = "";
+                return;
+            }
+           
             currentTerm = term;
             clearTimeout(inputDebounce);
-            // when user types, reset paging and fetch from server (accurate results)
             inputDebounce = setTimeout(() => {
-                // if empty search, still fetch first page (useful to show popular / first page)
                 hasMore = true;
                 loadCities(currentTerm, true);
             }, 300);
         });
 
-        // open modal handler: when modal opens, reset and load first page
         $('#exampleModal').on('show.bs.modal', function () {
+            resultsList.style.display = 'none';
             currentTerm = "";
             page = 1;
             hasMore = true;
@@ -241,65 +247,134 @@
             selectedCity = null;
             searchInput.value = "";
             updateSaveButton();
-            loadCities("", true);
         });
 
-        // Save action: only enabled when a city is selected
+        searchModal.addEventListener('click', function (event) {
+            if (!resultsList.contains(event.target) && !resultsList.contains(event.target)) {
+                resultsList.style.display = 'none';
+            }
+        });
+        
         saveBtn.addEventListener("click", () => {
             if (!selectedCity) return;
-            // perform saving logic here (e.g., POST to favourites endpoint)
-            // Example:
-            console.log(selectCity);
-            const payload={ cityId: selectedCity.id };
-                fetch('/api/FavouriteCities?handler=Add', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
-                    .then(response => {
-                        if (!response.ok) {
-                            // Ako odgovor nije OK, bacit ćemo grešku
-                            throw new Error("Failed to save city");
-                        }
+            const payload = { cityId: selectedCity.id };
+            fetch('/api/FavouriteCities?handler=Add', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
+                .then(async(response) => {
+                    if (!response.ok) {
+                        throw new Error("Failed to save city");
+                    }
 
-                        appendCityToTable(selectedCity);
+                    await appendCityToTable(selectedCity.id);
 
-                        // Zatvori modal
-                        $('#exampleModal').modal('hide');
-                        return response;  // Ovdje se samo vraća 'response', bez automatskog parsiranja
-                    })
-                    .catch(error => {
-                        console.error("Error:", error);
-                    });
-
-            console.log("Selected city to save:", selectedCity);
-            // close modal for UX
+                    $('#exampleModal').modal('hide');
+                    return response;
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
             $('#exampleModal').modal('hide');
         });
 
-        function appendCityToTable(city) {
-            const tableBody = document.querySelector("#favouritesTbody");
+         async function appendCityToTable(cityId) {
+            const response = await fetch(`/api/FavouriteCities/GetFavouriteCities?cityId=${cityId}`);
+            const data = await response.json();
+            const item = data[0];
 
-            // Kreiraj novi red u tabeli
             const row = document.createElement("tr");
-
-            // Popuni red sa podacima grada
+           
             row.innerHTML = `
-                <td>${city.name}</td>
-                <td>${city.country}</td>
-                <td>${city.country}</td>
-                <td>${city.country}</td>
-                <td>${city.country}</td>
-                <td>${city.country}</td>
-               
+                <td>${item.cityData.city}</td>
+                <td>${item.cityData.country}</td>
+                <td>${item.cityData.aqi}</td>
+                <td>${item.cityData.pm25}</td>
+                <td>${item.cityData.pm10}</td>
+                <td>${item.cityData.measuredAt}</td>
                 <td>
-                    <button class="btn btn-sm btn-danger remove-favourite" type="button" data-fav-id="${city.id}">
+                    <button class="btn btn-sm btn-danger remove-favourite" type="button" data-fav-id="${item.id}">
                         <i class="fas fa-trash"></i>
                     </button>
+                    <div class="popover-confirm d-none">
+                        <button class="btn btn-sm btn-danger confirm-delete">Confirm Delete</button>
+                        <button class="btn btn-sm btn-secondary cancel-delete">Cancel</button>
+                    </div>
                 </td>
             `;
 
-            // Dodaj red u tabelu
             tableBody.appendChild(row);
+
+            // update header visibility
+            const hasDataAfterAppend = tableBody.rows.length > 1;
+            favouritesThead.style.display = hasDataAfterAppend ? '' : 'none';
         }
-        // initial load if modal not used: optionally pre-load first page
-        // loadCities("", true);
+
+        // Use event delegation on the tbody so dynamically added rows work
+        tableBody.addEventListener('click', async function (e) {
+            const removeBtn = e.target.closest('.remove-favourite');
+            if (removeBtn) {
+                // hide any open popovers, then toggle this one
+                document.querySelectorAll('.popover-confirm').forEach(popover => popover.classList.add('d-none'));
+                const popover = removeBtn.nextElementSibling;
+                if (popover) popover.classList.toggle('d-none');
+                return;
+            }
+
+            const confirmBtn = e.target.closest('.confirm-delete');
+            if (confirmBtn) {
+                const cityId = confirmBtn.closest('td').querySelector('.remove-favourite').getAttribute('data-fav-id');
+                try {
+                    const resp = await fetch(`/api/FavouriteCities/${cityId}`, { method: 'POST' });
+                    if (resp.ok) {
+                        confirmBtn.closest('tr').remove();
+                        console.log("City deleted successfully.");
+                    } else {
+                        alert("Failed to delete city.");
+                    }
+                } catch (error) {
+                    alert("Error: " + error.message);
+                }
+
+                const pop = confirmBtn.closest('td').querySelector('.popover-confirm');
+                if (pop) pop.classList.add('d-none');
+
+                const hasDataAfterDelete = tableBody.rows.length > 1;
+                favouritesThead.style.display = hasDataAfterDelete ? '' : 'none';
+                return;
+            }
+
+            const cancelBtn = e.target.closest('.cancel-delete');
+            if (cancelBtn) {
+                const pop = cancelBtn.closest('.popover-confirm');
+                if (pop) pop.classList.add('d-none');
+            }
+        });
+
     })();
 });
-</script>}
+</script>
+}
+<style>
+    .popover-confirm {
+        position: absolute;
+        display: none;
+        background-color: white;
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        width: auto;
+        white-space: nowrap;
+    }
+
+    .remove-favourite {
+        position: relative;
+    }
+
+        .remove-favourite:hover + .popover-confirm,
+        .popover-confirm:hover {
+            display: block;
+        }
+
+    .popover-confirm button {
+        margin: 5px;
+    }</style>

@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Models.BaseIServices;
+﻿using Infrastructure.Interfaces.BaseServices;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AirQuality.UI.Controllers.BaseControllers
 {

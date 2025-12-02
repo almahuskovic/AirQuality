@@ -9,7 +9,8 @@ namespace Models.Dto
 {
     public class FavouriteCitiesDto
     {
-        public List<AirQualityMeasurementDto> Cities { get; set; }
+        public int Id { get; set; }
+        public AirQualityMeasurementDto CityData { get; set; }
         public int CityId { get; set; }
         public string UserId { get; set; }
     }

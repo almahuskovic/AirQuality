@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Models.BaseIServices;
+﻿using Infrastructure.Interfaces.BaseServices;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AirQuality.UI.Controllers.BaseControllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class BaseCRUDController<T, TSearch, TInsert, TUpdate> : BaseReadController<T, TSearch>
         where T : class where TSearch : class where TInsert : class where TUpdate : class
@@ -47,7 +47,7 @@ namespace AirQuality.UI.Controllers.BaseControllers
             }
         }
 
-        [HttpDelete("{id}")]
+        [HttpPost("{id}")]
         public virtual async Task<ActionResult<T>> Delete(int id)
         {
             try

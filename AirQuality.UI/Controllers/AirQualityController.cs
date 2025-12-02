@@ -1,16 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Infrastructure.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 using Models.Dto;
-using Models.IServices;
 
 namespace AirQuality.UI.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class AirQualityController : ControllerBase
     {
-        protected readonly IAirQuality _airService;
+        protected readonly IAirQualityService _airService;
 
-        public AirQualityController(IAirQuality airService)
+        public AirQualityController(IAirQualityService airService)
         {
             _airService = airService;
         }

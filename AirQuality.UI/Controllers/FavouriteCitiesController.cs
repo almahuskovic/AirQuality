@@ -1,7 +1,7 @@
 ﻿using AirQuality.UI.Controllers.BaseControllers;
+using Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Models.Dto;
-using Models.IServices;
 using Models.Requests.UserFavouriteCities;
 
 namespace AirQuality.UI.Controllers
@@ -10,8 +10,16 @@ namespace AirQuality.UI.Controllers
     [Route("api/[controller]")]
     public class FavouriteCitiesController : BaseCRUDController<FavouriteCitiesDto, FavouriteCitiesSearchRequest, FavouriteCitiesUpsertRequest, FavouriteCitiesUpsertRequest>
     {
-        public FavouriteCitiesController(IFavouriteCities favouriteCities) : base(favouriteCities)
-        {     
+        private readonly IFavouriteCitiesService _favouritecities;
+        public FavouriteCitiesController(IFavouriteCitiesService favouriteCities) : base(favouriteCities)
+        {
+            _favouritecities = favouriteCities;
+        }
+
+        [HttpGet("GetFavouriteCities")]
+        public async Task<List<FavouriteCitiesDto>?> GetFavouriteCities([FromQuery] FavouriteCitiesSearchRequest request)
+        {
+            return await _favouritecities.GetFavouriteCities(request);
         }
     }
 }

@@ -1,11 +1,11 @@
 using Infrastructure;
 using Infrastructure.Identity;
+using Infrastructure.Interfaces;
 using Infrastructure.Services;
 using Infrastructure.Services.BackgroundServices;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
-using Models.IServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,9 +53,10 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<Context>()
 .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<IAirQuality, AirQualityService>();
-builder.Services.AddScoped<ICity, CityService>();
-builder.Services.AddScoped<IFavouriteCities, FavouriteCitiesService>();
+builder.Services.AddScoped<IAirQualityService, AirQualityService>();
+builder.Services.AddScoped<ICityService, CityService>();
+builder.Services.AddScoped<IFavouriteCitiesService, FavouriteCitiesService>();
+builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, DummyEmailSender>();
 builder.Services.AddHttpContextAccessor();
@@ -91,13 +92,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
+app.UseCors(policy =>
+{
+    policy.AllowAnyOrigin()
+          .AllowAnyMethod()
+          .AllowAnyHeader();
+});
 app.MapRazorPages();
-//using (var scope = app.Services.CreateScope())
-//{
-//    var cityService = scope.ServiceProvider.GetRequiredService<ICity>();
-//    cityService.ImportCitiesInDB();
-//}
-
 
 app.Run();

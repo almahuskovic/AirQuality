@@ -1,25 +1,25 @@
 ﻿using AutoMapper;
 using CsvHelper;
 using Infrastructure.BaseServices;
+using Infrastructure.Interfaces;
 using Models.Dto;
 using Models.Entities;
-using Models.IServices;
 using Models.Requests.Cities;
-using System.Collections.Generic;
-using System.Formats.Asn1;
 using System.Globalization;
 
 namespace Infrastructure.Services
 {
-    public class CityService : BaseCRUDService<CityDto, City, CitySearchRequest, CityUpsertRequest, CityUpsertRequest>, ICity
+    public class CityService : BaseCRUDService<CityDto, City, CitySearchRequest, CityUpsertRequest, CityUpsertRequest>, ICityService
     {
-        public CityService(Context context, IMapper mapper) : base(context, mapper)
+        private readonly IUserContextService _userContextService;
+        public CityService(Context context, IMapper mapper, IUserContextService userContextService) : base(context, mapper)
         {
+            _userContextService = userContextService;
         }
 
         public override IEnumerable<CityDto> Get(CitySearchRequest search)
         {
-           var entity = Context.Set<City>().AsQueryable();
+            var entity = Context.Set<City>().AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search.Name))
             {
@@ -29,6 +29,13 @@ namespace Infrastructure.Services
             if (!string.IsNullOrWhiteSpace(search.ISO))
             {
                 entity = entity.Where(x => x.ISO.Contains(search.ISO));
+            }
+
+            if (search.SkipFavourites.HasValue && search.SkipFavourites.Value)
+            {
+                var userId = _userContextService.GetCurrentUserIdAsync().Result;
+                var favouriteCityIds = Context.UserFavouriteCities.Where(x => x.UserId == userId && !x.IsDeleted).Select(x => x.CityId).Distinct().ToList();
+                entity = entity.Where(x => !favouriteCityIds.Contains(x.Id));
             }
 
             if (search.South.HasValue && search.West.HasValue && search.East.HasValue && search.North.HasValue)
@@ -71,7 +78,7 @@ namespace Infrastructure.Services
                 }
             }
 
-            if(cities.Any())
+            if (cities.Any())
             {
                 var citiesToAdd = new List<CityCsv>();
                 citiesToAdd.AddRange(cities.Where(x => x.capital == "primary" || x.iso2 == "BA").ToList());
@@ -90,7 +97,7 @@ namespace Infrastructure.Services
                 Context.Cities.AddRange(citiesDb);
                 Context.SaveChanges();
             }
-           
+
             Console.WriteLine("Success.");
         }
     }

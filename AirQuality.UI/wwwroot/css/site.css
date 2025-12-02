@@ -20,3 +20,119 @@ html {
 body {
   margin-bottom: 60px;
 }
+/* Air Quality Index (AQI) Styles */
+.aqi-text {
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    text-align: center;
+}
+/* Legend Styles */
+.legend {
+    border-radius: 5px;
+    margin: 20px auto;
+    justify-content: center;
+    display: flex;
+    font-size: 14px;
+    color: white;
+}
+
+.legend .legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    box-sizing: border-box;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.legend .good {
+    background-color: green;
+}
+
+.legend .moderate {
+    background-color: yellow;
+}
+
+.legend .unhealthy-sensitive {
+    background-color: orange;
+}
+
+.legend .unhealthy {
+    background-color: red;
+}
+
+.legend .very-unhealthy {
+    background-color: purple;
+}
+
+.legend .hazardous {
+    background-color: maroon;
+}
+
+.legend-item span {
+    margin: 5px 8px;
+}
+
+.input-group {
+    margin: 30px;
+    padding: 0 15%;
+    width: auto;
+}
+/* Air Quality Map Marker Styles */
+.aq-marker {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    border: 2px solid white;
+    font-size: 14px;
+}
+
+.aq-legend {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255,255,255,0.9);
+    padding: 12px;
+    border-radius: 8px;
+    line-height: 22px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.25);
+}
+
+#a-legenda span {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    margin-right: 6px;
+    border-radius: 4px;
+}
+/* Popover confirmation styles */
+.popover-confirm {
+    position: absolute;
+    display: none;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    width: auto;
+    white-space: nowrap;
+}
+
+.remove-favourite {
+    position: relative;
+}
+
+    .remove-favourite:hover + .popover-confirm,
+    .popover-confirm:hover {
+        display: block;
+    }
+
+.popover-confirm button {
+    margin: 5px;
+}
